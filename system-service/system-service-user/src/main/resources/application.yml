@@ -1,0 +1,14 @@
+server:
+  port: 18089
+spring:
+  application:
+    name: user
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/t_user?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
+    username: root
+    password: root
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true # 开启驼峰
+    #配置日志
