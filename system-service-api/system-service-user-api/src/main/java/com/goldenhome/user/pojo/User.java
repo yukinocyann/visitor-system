@@ -18,27 +18,17 @@ import java.util.Date;
 public class User {
 
 
-        private Integer id;//用户id
+    private Integer id;//用户id
 
+    private String username;//用户名
 
-        private String username;//用户名
+    private String password;//密码
 
+    private String phone;//注册手机号
 
-        private String password;//密码
+    private Date loginTime;//登录时间
 
+    private Integer status;//使用状态（0离开，1正常）
 
-        private String phone;//注册手机号
-
-
-        private Date creatTime;//创建时间
-
-
-
-        private String name;//真实姓名
-
-
-        private Integer status;//使用状态（1正常 0离开）
-
-
-        private Date lastLoginTime;//最后登录时间
+    private Date lastLoginTime;//最后登录时间
 }
