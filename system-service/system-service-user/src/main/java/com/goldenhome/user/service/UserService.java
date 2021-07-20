@@ -2,15 +2,24 @@ package com.goldenhome.user.service;
 
 import com.goldenhome.user.pojo.User;
 
+
 import java.util.Date;
 
 public interface UserService {
-    void update(User user);
+    void update(String loginTime,Integer id);
 
-    User selectByUsername(String username, String password, String accessCode, Integer codeStatus);
+    User selectByUsername(String username, String password, String accessCode);
 
 
-    void logout(Integer status, Date lastLoginTime, Integer id);
+    void logout(String lastLoginTime, Integer id);
 
-    void insertAccessCode(String accessCode, Integer codeStatus, Integer id);
+    void insertAccessCode(String accessCode, Integer id);
+
+    void changeCodeStatus(Integer id);
+
+    void addMember(User user);
+
+    Integer count(String localTime);
+
+    User verify(String username);
 }

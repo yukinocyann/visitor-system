@@ -26,9 +26,9 @@ public class User {
 
     private String phone;//注册手机号
 
-    private Date loginTime;//登录时间
+    private String loginTime;//登录时间
 
     private Integer status;//使用状态（0离开，1正常）
 
-    private Date lastLoginTime;//最后登录时间
+    private String lastLoginTime;//最后登录时间
 }

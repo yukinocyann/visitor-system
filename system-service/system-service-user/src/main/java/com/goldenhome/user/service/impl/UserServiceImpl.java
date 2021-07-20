@@ -4,32 +4,53 @@ import com.goldenhome.user.dao.UserMapper;
 import com.goldenhome.user.pojo.User;
 import com.goldenhome.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.Date;
-
+@Service("userService")
 public class UserServiceImpl implements UserService {
     @Autowired
     private UserMapper userMapper;
 
 
     @Override
-    public void update(User user) {
-        userMapper.update(user);
+    public void update(String loginTime,Integer id) {
+        userMapper.update(loginTime,id);
     }
 
     @Override
-    public User selectByUsername(String username, String password, String accessCode, Integer codeStatus) {
-        return userMapper.selectByUsername(username,password,accessCode,codeStatus);
+    public User selectByUsername(String username, String password, String accessCode) {
+        return userMapper.selectByUsername(username,password,accessCode);
     }
 
     @Override
-    public void logout(Integer status, Date lastLoginTime, Integer id) {
-        userMapper.logout(status,lastLoginTime,id);
+    public void logout(String lastLoginTime, Integer id) {
+        userMapper.logout(lastLoginTime,id);
     }
 
     @Override
-    public void insertAccessCode(String accessCode, Integer codeStatus, Integer id) {
-        userMapper.insertAccessCode(accessCode, codeStatus, id);
+    public void insertAccessCode(String accessCode,  Integer id) {
+        userMapper.insertAccessCode(accessCode, id);
+    }
+
+    @Override
+    public void changeCodeStatus(Integer id) {
+        userMapper.changeCodeStatus(id);
+    }
+
+    @Override
+    public void addMember(User user) {
+        userMapper.addMember(user);
+    }
+
+    @Override
+    public Integer count(String localTime) {
+        return userMapper.count(localTime);
+    }
+
+    @Override
+    public User verify(String username) {
+        return userMapper.verify(username);
     }
 
 

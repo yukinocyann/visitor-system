@@ -5,18 +5,26 @@
 <mapper namespace="com.goldenhome.user.dao.UserMapper">
 
 
-    <update id="update" parameterType="com.goldenhome.user.pojo.User">
+
+    <insert id="addMember"  parameterType="com.goldenhome.user.pojo.User">
+    insert into t_user
+    (username,password,phone,status)
+    values
+    (#{username},#{password},#{phone},1)
+    </insert>
+
+    <update id="update" >
     update  t_user
     set
     loginTime = #{loginTime},
-    status = #{status}
+    status = 1
     where
     id = #{id}
     </update>
 
     <select id="selectByUsername"  resultType="com.goldenhome.user.pojo.User">
     SELECT  id,username,password,phone,loginTime,status,lastLoginTime
-    FROM  t_user
+    FROM  t_user,
     t_accesscode
     where
     username = #{username}
@@ -31,16 +39,40 @@
     <update id="logout" >
     update  t_user
     set
-    status = #{status},
-    lastloginTime = #{lastloginTime}
+    status = 0,
+    lastLoginTime = #{lastLoginTime}
     where
     id = #{id}
     </update>
 
+    <update id="changeCodeStatus" >
+    update  t_accesscode
+    set
+    codeStatus = 0
+    where
+    userid = #{id}
+    </update>
+
+
     <insert id="insertAccessCode"  >
     insert into t_accesscode (accessCode,codeStatus,userId)
-    values (#{accessCode},#{codeStatus},#{id})
-</insert>
+    values (#{accessCode},1,#{id})
+    </insert>
+
+    <select id="count"  parameterType="String" resultType="Integer">
+    select
+    count(id) AS count
+    FROM t_user
+    WHERE
+    DAY(lastLoginTime) = DAY(#{localTime})
+    </select>
+
+    <select id="verify"  resultType="com.goldenhome.user.pojo.User">
+    SELECT  id,username,password,phone,loginTime,status,lastLoginTime
+    FROM  t_user
+    where
+    username = #{username}
+    </select>
 
 </mapper>
 

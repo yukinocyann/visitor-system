@@ -1,15 +1,24 @@
 package com.goldenhome.user.dao;
 
 import com.goldenhome.user.pojo.User;
+import org.springframework.stereotype.Repository;
 
-import java.util.Date;
 
+@Repository
 public interface UserMapper {
-    void update(User user);
+    void update(String loginTime,Integer id);
 
-    User selectByUsername(String username, String password, String accessCode, Integer codeStatus);
+    User selectByUsername(String username, String password, String accessCode);
 
-    void logout(Integer status, Date lastLoginTime, Integer id);
+    void logout(String lastLoginTime, Integer id);
 
-    void insertAccessCode(String accessCode, Integer codeStatus, Integer id);
+    void insertAccessCode(String accessCode,  Integer id);
+
+    void changeCodeStatus(Integer id);
+
+    void addMember(User user);
+
+    Integer count(String localTime);
+
+    User verify(String username);
 }
