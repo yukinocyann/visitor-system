@@ -59,12 +59,12 @@
     values (#{accessCode},1,#{id})
     </insert>
 
-    <select id="count"  parameterType="String" resultType="Integer">
+    <select id="count"  parameterType="String" resultType="String">
     select
     count(id) AS count
     FROM t_user
     WHERE
-    DAY(lastLoginTime) = DAY(#{localTime})
+    SUBSTRING(lastLoginTime,1,10) = #{localTime}
     </select>
 
     <select id="verify"  resultType="com.goldenhome.user.pojo.User">
@@ -72,6 +72,18 @@
     FROM  t_user
     where
     username = #{username}
+    </select>
+
+    <insert id="insertStatistic"  parameterType="String">
+    insert into t_statistics (date,viewers)
+    values (#{localTime},#{count})
+    </insert>
+
+    <select id="check"  parameterType="String" resultType="String">
+    SELECT   viewers
+    FROM  t_statistics
+    where
+    date = #{localTime}
     </select>
 
 </mapper>

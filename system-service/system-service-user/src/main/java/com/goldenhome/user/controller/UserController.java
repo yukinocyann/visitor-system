@@ -1,12 +1,14 @@
 package com.goldenhome.user.controller;
 
 import com.goldenhome.user.pojo.AccessCode;
+import com.goldenhome.user.pojo.Statistic;
 import com.goldenhome.user.pojo.User;
 import com.goldenhome.user.service.UserService;
 import entity.RandomStringUtil;
 import entity.Result;
 import entity.StatusCode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,6 +36,7 @@ public class UserController {
      * @param
      * @return
      */
+    @Transactional
     @PostMapping("/register")
     public Result register(@RequestBody User user) {
         String username = user.getUsername();
@@ -67,6 +70,7 @@ public class UserController {
      * @param user,accessCode
      * @return
      */
+    @Transactional
     @PostMapping("/login")
     public Result login(@RequestBody User user, @RequestParam String accessCode) throws Exception {
         String username = user.getUsername();
@@ -117,14 +121,21 @@ public class UserController {
      * @param user
      * @return
      */
-    @PostMapping("/statistics")
+    @Transactional
+    @PostMapping("/daystatistics")
     public Result statistics() {
 
-        String localTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String localTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
-        Integer count = userService.count(localTime);
+        String count = userService.count(localTime);
 
-        return new Result(true, StatusCode.OK, "统计成功", count);
+        String record = userService.check(localTime);
+        if (null != record) {
+            return new Result(false, StatusCode.ERROR, "已经统计", "今日访问人数为" + record);
+        }
+        userService.insertStatistic(localTime, count);
+
+        return new Result(true, StatusCode.OK, "统计成功", "今日访问人数为" + count);
     }
 
 

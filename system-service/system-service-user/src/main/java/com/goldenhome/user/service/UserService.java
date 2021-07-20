@@ -19,7 +19,11 @@ public interface UserService {
 
     void addMember(User user);
 
-    Integer count(String localTime);
+    String count(String localTime);
 
     User verify(String username);
+
+    void insertStatistic(String localTime, String count);
+
+    String check(String localTime);
 }

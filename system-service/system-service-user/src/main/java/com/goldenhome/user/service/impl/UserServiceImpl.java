@@ -44,13 +44,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Integer count(String localTime) {
+    public String count(String localTime) {
         return userMapper.count(localTime);
     }
 
     @Override
     public User verify(String username) {
         return userMapper.verify(username);
+    }
+
+    @Override
+    public void insertStatistic(String localTime, String count) {
+        userMapper.insertStatistic(localTime,count);
+    }
+
+    @Override
+    public String check(String localTime) {
+        return userMapper.check(localTime);
     }
 
 
