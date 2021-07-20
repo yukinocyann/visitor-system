@@ -99,7 +99,6 @@ public class UserController {
     @PostMapping("/logout")
     public Result logout(@RequestBody User user) throws Exception {
 
-
         String randomCode = RandomStringUtil.getRandomCode(6, 0);
 
         String localTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
