@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 @Service("userService")
 public class UserServiceImpl implements UserService {
+
     @Autowired
     private UserMapper userMapper;
 
@@ -19,8 +20,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User selectByUsername(String username, String password, String accessCode) {
-        return userMapper.selectByUsername(username,password,accessCode);
+    public User selectByUsername(String username, String accessCode) {
+        return userMapper.selectByUsername(username,accessCode);
     }
 
     @Override

@@ -29,8 +29,6 @@
     where
     username = #{username}
     and
-    password = #{password}
-    and
     accessCode = #{accessCode}
     and
     codeStatus = 1

@@ -8,14 +8,18 @@ import entity.RandomStringUtil;
 import entity.Result;
 import entity.StatusCode;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.Date;
 
 /**
@@ -31,6 +35,9 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
     /***
      * 访客注册
      * @param
@@ -39,6 +46,7 @@ public class UserController {
     @Transactional
     @PostMapping("/register")
     public Result register(@RequestBody User user) {
+
         String username = user.getUsername();
 
         User somebody = userService.verify(username);
@@ -48,6 +56,10 @@ public class UserController {
         }
 
         String password = user.getPassword();
+
+        String encodePassword = passwordEncoder.encode(password);
+
+        user.setPassword(encodePassword);
 
         String phone = user.getPhone();
 
@@ -65,28 +77,36 @@ public class UserController {
     }
 
 
-    /***
-     * 访客登录
-     * @param user,accessCode
-     * @return
-     */
+    /**
+    * @Description: 访客登录
+    * @Param: [user, accessCode]
+    * @return: entity.Result
+    * @Author: yukino
+    * @Date: 2021/7/21
+    */
     @Transactional
     @PostMapping("/login")
     public Result login(@RequestBody User user, @RequestParam String accessCode) throws Exception {
+
         String username = user.getUsername();
 
         String password = user.getPassword();
-
 
         if (StringUtils.isEmpty(username) || StringUtils.isEmpty(password) || StringUtils.isEmpty(accessCode)) {
             return new Result(false, StatusCode.LOGINERROR, "用户名和密码和访问码不能为空");
         }
 
-        User somebody = userService.selectByUsername(username, password, accessCode);
+        User somebody = userService.selectByUsername(username, accessCode);
 
         if (null == somebody) {
-            return new Result(false, StatusCode.LOGINERROR, "用户名或密码错误，访问码错误或失效");
+            return new Result(false, StatusCode.LOGINERROR, "用户不存在或访问码错误或失效");
         }
+
+        if (!passwordEncoder.matches(password,somebody.getPassword())) {
+            return new Result(false, StatusCode.LOGINERROR, "密码错误");
+        }
+
+
 
         String localTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
@@ -130,9 +150,11 @@ public class UserController {
         String count = userService.count(localTime);
 
         String record = userService.check(localTime);
+
         if (null != record) {
             return new Result(false, StatusCode.ERROR, "已经统计", "今日访问人数为" + record);
         }
+
         userService.insertStatistic(localTime, count);
 
         return new Result(true, StatusCode.OK, "统计成功", "今日访问人数为" + count);
@@ -140,3 +162,6 @@ public class UserController {
 
 
 }
+
+
+

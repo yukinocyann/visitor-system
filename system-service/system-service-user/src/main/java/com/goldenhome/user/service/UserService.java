@@ -8,7 +8,7 @@ import java.util.Date;
 public interface UserService {
     void update(String loginTime,Integer id);
 
-    User selectByUsername(String username, String password, String accessCode);
+    User selectByUsername(String username, String accessCode);
 
 
     void logout(String lastLoginTime, Integer id);
