@@ -31,4 +31,6 @@ public class User {
     private Integer status;//使用状态（0离开，1正常）
 
     private String lastLoginTime;//最后登录时间
+
+
 }

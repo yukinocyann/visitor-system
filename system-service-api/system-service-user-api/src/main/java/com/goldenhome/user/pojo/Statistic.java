@@ -14,7 +14,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Statistic {
-    private String date;//访问码状态(0失效，1正常）
+    //private String date;//
 
-    private String viewers;//用户id
+    private String reservationVisitorTotal;//用户
+
+    private String actualVisitorTotal;//用户
+
+    private String standUpVisitorTotal;//用户
+
 }

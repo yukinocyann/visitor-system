@@ -5,36 +5,44 @@
 <mapper namespace="com.goldenhome.user.dao.UserMapper">
 
 
-
-    <insert id="addMember"  parameterType="com.goldenhome.user.pojo.User">
+    <insert id="addMember" parameterType="com.goldenhome.user.pojo.User">
     insert into t_user
     (username,password,phone,status)
     values
-    (#{username},#{password},#{phone},1)
+    (#{username},#{password},#{phone},0)
     </insert>
 
-    <update id="update" >
+    <insert id="reserveInsert">
+    insert into t_reservation
+    (reservationLoginTime,reservationExpireTime,phone,actualVisitStatus)
+    values
+    (#{reservationLoginTime},#{reservationExpireTime},#{phone},2)
+    </insert>
+
+    <update id="update">
     update  t_user
     set
     loginTime = #{loginTime},
     status = 1
     where
-    id = #{id}
+    phone = #{phone}
     </update>
 
-    <select id="selectByUsername"  resultType="com.goldenhome.user.pojo.User">
+    <select id="selectByPhone" resultType="com.goldenhome.user.pojo.User">
     SELECT  id,username,password,phone,loginTime,status,lastLoginTime
     FROM  t_user,
     t_accesscode
     where
-    username = #{username}
+    phone = #{phone}
     and
     accessCode = #{accessCode}
     and
     codeStatus = 1
+    and
+    expireTime >= #{localTime}
     </select>
 
-    <update id="logout" >
+    <update id="logout">
     update  t_user
     set
     status = 0,
@@ -43,46 +51,178 @@
     id = #{id}
     </update>
 
-    <update id="changeCodeStatus" >
+    <update id="changeCodeStatus">
     update  t_accesscode
     set
     codeStatus = 0
     where
-    userid = #{id}
+    userId = #{id}
     </update>
 
 
-    <insert id="insertAccessCode"  >
-    insert into t_accesscode (accessCode,codeStatus,userId)
-    values (#{accessCode},1,#{id})
+    <insert id="insertAccessCode">
+    insert into t_accesscode (accessCode,codeStatus,expireTime,userId)
+    values (#{accessCode},1,#{reservationExpireTime},#{id})
     </insert>
 
-    <select id="count"  parameterType="String" resultType="String">
-    select
-    count(id) AS count
-    FROM t_user
-    WHERE
-    SUBSTRING(lastLoginTime,1,10) = #{localTime}
+    <select id="countByDaytime" parameterType="java.lang.String" resultType="java.util.HashMap">
+    SELECT standUpVisitorTotal,actualVisitorTotal,reservationVisitorTotal
+	FROM
+
+	(
+    SELECT
+	count(a)  AS standUpVisitorTotal
+	FROM
+    (select
+     count(reservationId) AS a
+     FROM t_reservation
+        <include refid="statistic" />
+        and
+	 actualVisitStatus = 0
+	 GROUP BY phone)  b
+	 )  standUpVisitorTotalTable ,
+
+
+	(
+	SELECT
+	count(c)  AS actualVisitorTotal
+	FROM
+    (select
+     count(reservationId) AS c
+     FROM t_reservation
+        <include refid="statistic" />
+        and
+	 actualVisitStatus = 1
+	 GROUP BY phone)  d
+	 ) actualVisitorTotalTable ,
+
+
+	(
+	SELECT
+	count(e)  AS reservationVisitorTotal
+	FROM
+    (select
+     count(reservationId) AS e
+     FROM t_reservation
+        <include refid="statistic" />
+        GROUP BY phone)  f
+	 ) reservationVisitorTotalTable
     </select>
 
-    <select id="verify"  resultType="com.goldenhome.user.pojo.User">
+    <sql id="statistic">
+        <where>
+            <choose>
+                <when test="daytime !=null and endQueryTime !=null">
+                    reservationLoginTime between #{daytime} and #{endQueryTime}
+                </when >
+                <when test="daytime !=null">
+                    AND   SUBSTRING(reservationLoginTime,1,10) = #{daytime}
+                </when >
+                <when test="monthTime !=null ">
+                    AND SUBSTRING(reservationLoginTime,1,7) = #{monthTime}
+                </when >
+                <when test="yearTime !=null">
+                    AND SUBSTRING(reservationLoginTime,1,4) = #{yearTime}
+                </when >
+            </choose>
+        </where>
+    </sql>
+
+
+
+
+    <select id="verify" resultType="com.goldenhome.user.pojo.User">
     SELECT  id,username,password,phone,loginTime,status,lastLoginTime
     FROM  t_user
     where
-    username = #{username}
+    phone = #{phone}
     </select>
 
-    <insert id="insertStatistic"  parameterType="String">
-    insert into t_statistics (date,viewers)
-    values (#{localTime},#{count})
-    </insert>
-
-    <select id="check"  parameterType="String" resultType="String">
-    SELECT   viewers
-    FROM  t_statistics
+    <select id="avoid" resultType="String">
+    SELECT   accessCode
+    FROM  t_accesscode
     where
-    date = #{localTime}
+    accessCode = #{accessCode}
+    and
+    codeStatus = 0
+    and
+    userId = #{id}
     </select>
+
+    <select id="avoidFirst" resultType="String">
+    SELECT   accessCode
+    FROM  t_accesscode
+    where
+    userId = #{id}
+    </select>
+
+    <update id="updateReservation">
+    update  t_reservation
+    set
+    actualVisitTime = now(),
+    actualVisitStatus = 1
+    where
+    TIMESTAMPDIFF(MINUTE,NOW(),reservationLoginTime) >= -60
+    and
+    phone = #{phone}
+    and
+    actualVisitStatus = 2
+    </update>
+
+    <update id="updateUserActualVisitStatus">
+    update  t_reservation
+    set
+    actualVisitStatus = 0
+    where
+    TIMESTAMPDIFF(HOUR,reservationLoginTime,#{localTime})  >= 1
+    and
+    actualVisitStatus = 2
+    </update>
+
+
+    <select id="queryAccessCode" resultType="com.goldenhome.user.pojo.AccessCode">
+    SELECT  accessCode,codeStatus,expireTime,userId
+    FROM  t_accesscode
+    where
+    userId = #{id}
+    and
+    codeStatus = 1
+    </select>
+
+    <select id="queryStatistics"  resultType="java.util.HashMap">
+    SELECT standUpSomebodyTotal,actualSomebodyTotal,reservationSomebodyTotal
+	FROM
+    (SELECT
+     count(actualVisitStatus) as standUpSomebodyTotal
+     FROM t_reservation
+        <include refid="statistic" />
+     and
+     phone = #{phone}
+     and
+     actualVisitStatus = 0
+    )  standUpSomebodyTotalTable ,
+
+    (SELECT
+     count(actualVisitStatus) as actualSomebodyTotal
+     FROM t_reservation
+        <include refid="statistic" />
+     and
+     phone = #{phone}
+     and
+     actualVisitStatus = 1
+    )  actualSomebodyTotalTable ,
+
+
+    (SELECT
+     count(actualVisitStatus) as reservationSomebodyTotal
+     FROM t_reservation
+        <include refid="statistic" />
+     and
+     phone = #{phone}
+    )  reservationSomebodyTotal
+    </select>
+
+
 
 </mapper>
 

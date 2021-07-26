@@ -18,6 +18,8 @@ public class AccessCode {
 
     private Integer codeStatus;//访问码状态(0失效，1正常）
 
+    private Integer expireTime;//访问码过期时间
+
     private Integer userId;//用户id
 
 }
