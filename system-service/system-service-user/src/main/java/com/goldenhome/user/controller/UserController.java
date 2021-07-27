@@ -4,6 +4,7 @@ import com.goldenhome.user.pojo.AccessCode;
 import com.goldenhome.user.pojo.Reservation;
 import com.goldenhome.user.pojo.User;
 import com.goldenhome.user.service.UserService;
+import com.goldenhome.user.utils.RedisUtils;
 import entity.RandomStringUtil;
 import entity.Result;
 import entity.StatusCode;
@@ -20,6 +21,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @Author yukino
@@ -36,6 +38,9 @@ public class UserController {
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
+
+    @Autowired
+    private RedisUtils redisUtils;
 
     /**
      * @Description: 预约
@@ -128,7 +133,7 @@ public class UserController {
 
             AccessCode accessCode = userService.queryAccessCode(somebody.getId());
 
-            return new Result(true, StatusCode.OK, "注册成功，访客码为" + accessCode.getAccessCode());
+            return new Result(true, StatusCode.OK, "申请成功，访客码为" + accessCode.getAccessCode());
         }
 
         return new Result(false, StatusCode.ERROR, "申请失败,请先注册");
@@ -217,44 +222,60 @@ public class UserController {
     @PostMapping("/statistics")
     public Result statistics(@RequestParam String queryTime, String endQueryTime) throws Exception {
 
-        HashMap<String, Long> dayStandUpVisitorTotalMap = new HashMap<String, Long>();
+        if(null == redisUtils.get(queryTime)){
 
-        String daytime = null;
-        String monthTime = null;
-        String yearTime = null;
-        if (null != queryTime &&  null != endQueryTime ) {
-            daytime = queryTime;
-            dayStandUpVisitorTotalMap = (HashMap<String, Long>) userService.countByDaytime(daytime, monthTime, yearTime, endQueryTime);
-        } else if (queryTime.length() == 10) {
-            daytime = queryTime;
-            dayStandUpVisitorTotalMap = (HashMap<String, Long>) userService.countByDaytime(daytime, monthTime, yearTime, endQueryTime);
-        } else if (queryTime.length() == 7) {
-            monthTime = queryTime;
-            dayStandUpVisitorTotalMap = (HashMap<String, Long>) userService.countByDaytime(daytime, monthTime, yearTime, endQueryTime);
-        } else if (queryTime.length() == 4) {
-            yearTime = queryTime;
-            dayStandUpVisitorTotalMap = (HashMap<String, Long>) userService.countByDaytime(daytime, monthTime, yearTime, endQueryTime);
-        }
+            HashMap<String, Long> dayStandUpVisitorTotalMap = new HashMap<String, Long>();
 
-        Long standUpVisitorTotal = null;
+            String daytime = null;
 
-        Long actualVisitorTotal = null;
+            String monthTime = null;
 
-        Long reservationVisitorTotal = null;
+            String yearTime = null;
 
-        for (String key : dayStandUpVisitorTotalMap.keySet()) {
-            if ("standUpVisitorTotal".equals(key)) {
-                standUpVisitorTotal = dayStandUpVisitorTotalMap.get(key);
-            } else if ("actualVisitorTotal".equals(key)) {
-                actualVisitorTotal = dayStandUpVisitorTotalMap.get(key);
-            } else if ("reservationVisitorTotal".equals(key)) {
-                reservationVisitorTotal = dayStandUpVisitorTotalMap.get(key);
+            if (null != queryTime &&  null != endQueryTime ) {
+                daytime = queryTime;
+
+                dayStandUpVisitorTotalMap = (HashMap<String, Long>) userService.countByDaytime(daytime, monthTime, yearTime, endQueryTime);
+            } else if (queryTime.length() == 10) {
+                daytime = queryTime;
+
+                dayStandUpVisitorTotalMap = (HashMap<String, Long>) userService.countByDaytime(daytime, monthTime, yearTime, endQueryTime);
+            } else if (queryTime.length() == 7) {
+                monthTime = queryTime;
+
+                dayStandUpVisitorTotalMap = (HashMap<String, Long>) userService.countByDaytime(daytime, monthTime, yearTime, endQueryTime);
+            } else if (queryTime.length() == 4) {
+                yearTime = queryTime;
+
+                dayStandUpVisitorTotalMap = (HashMap<String, Long>) userService.countByDaytime(daytime, monthTime, yearTime, endQueryTime);
             }
+
+            redisUtils.set(queryTime,dayStandUpVisitorTotalMap,10L, TimeUnit.MINUTES);
+
+            Long standUpVisitorTotal = null;
+
+            Long actualVisitorTotal = null;
+
+            Long reservationVisitorTotal = null;
+
+            for (String key : dayStandUpVisitorTotalMap.keySet()) {
+                if ("standUpVisitorTotal".equals(key)) {
+                    standUpVisitorTotal = dayStandUpVisitorTotalMap.get(key);
+                } else if ("actualVisitorTotal".equals(key)) {
+                    actualVisitorTotal = dayStandUpVisitorTotalMap.get(key);
+                } else if ("reservationVisitorTotal".equals(key)) {
+                    reservationVisitorTotal = dayStandUpVisitorTotalMap.get(key);
+                }
+            }
+
+            return new Result(true, StatusCode.OK, "统计成功", "爽约访问人数为" + standUpVisitorTotal
+                    + "实际访问人数为" + actualVisitorTotal
+                    + "总共访问人数为" + reservationVisitorTotal);
         }
 
-        return new Result(true, StatusCode.OK, "统计成功", "爽约访问人数为" + standUpVisitorTotal
-                + "实际访问人数为" + actualVisitorTotal
-                + "总共访问人数为" + reservationVisitorTotal);
+
+        return new Result(true, StatusCode.OK, "统计成功", redisUtils.get(queryTime));
+
     }
 
     @Transactional
@@ -263,45 +284,65 @@ public class UserController {
 
         String phone = user.getPhone();
 
-        HashMap<String, Long> someBodyMap = new HashMap<String, Long>();
+        if(null == redisUtils.get(phone)){
 
-        //someBodyMap = (HashMap<String, Long>) userService.queryStatistics(phone, queryTime, endQueryTime);
+            HashMap<String, Long> someBodyMap = new HashMap<String, Long>();
 
-        String daytime = null;
-        String monthTime = null;
-        String yearTime = null;
-        if (null != queryTime &&  null != endQueryTime ) {
-            daytime = queryTime;
-            someBodyMap = (HashMap<String, Long>) userService.queryStatistics(phone,daytime, monthTime, yearTime, endQueryTime);
-        } else if (queryTime.length() == 10) {
-            daytime = queryTime;
-            someBodyMap = (HashMap<String, Long>) userService.queryStatistics(phone,daytime, monthTime, yearTime, endQueryTime);
-        } else if (queryTime.length() == 7) {
-            monthTime = queryTime;
-            someBodyMap = (HashMap<String, Long>) userService.queryStatistics(phone,daytime, monthTime, yearTime, endQueryTime);
-        } else if (queryTime.length() == 4) {
-            yearTime = queryTime;
-            someBodyMap = (HashMap<String, Long>) userService.queryStatistics(phone,daytime, monthTime, yearTime, endQueryTime);
-        }
+            String daytime = null;
 
-        Long standUpSomebodyTotal = null;
+            String monthTime = null;
 
-        Long actualSomebodyTotal = null;
+            String yearTime = null;
 
-        Long reservationSomebodyTotal = null;
+            if (null != queryTime &&  null != endQueryTime ) {
+                daytime = queryTime;
 
-        for (String key : someBodyMap.keySet()) {
-            if ("standUpSomebodyTotal".equals(key)) {
-                standUpSomebodyTotal = someBodyMap.get(key);
-            } else if ("actualSomebodyTotal".equals(key)) {
-                actualSomebodyTotal = someBodyMap.get(key);
-            } else if ("reservationSomebodyTotal".equals(key)) {
-                reservationSomebodyTotal = someBodyMap.get(key);
+                someBodyMap = (HashMap<String, Long>) userService.queryStatistics(phone,daytime, monthTime, yearTime, endQueryTime);
+            } else if (queryTime.length() == 10) {
+                daytime = queryTime;
+
+                someBodyMap = (HashMap<String, Long>) userService.queryStatistics(phone,daytime, monthTime, yearTime, endQueryTime);
+            } else if (queryTime.length() == 7) {
+                monthTime = queryTime;
+
+                someBodyMap = (HashMap<String, Long>) userService.queryStatistics(phone,daytime, monthTime, yearTime, endQueryTime);
+            } else if (queryTime.length() == 4) {
+                yearTime = queryTime;
+
+                someBodyMap = (HashMap<String, Long>) userService.queryStatistics(phone,daytime, monthTime, yearTime, endQueryTime);
             }
+
+            redisUtils.set(phone,someBodyMap,10L, TimeUnit.MINUTES);
+
+            Long standUpSomebodyTotal = null;
+
+            Long actualSomebodyTotal = null;
+
+            Long reservationSomebodyTotal = null;
+
+            for (String key : someBodyMap.keySet()) {
+                if ("standUpSomebodyTotal".equals(key)) {
+
+                    standUpSomebodyTotal = someBodyMap.get(key);
+
+                } else if ("actualSomebodyTotal".equals(key)) {
+
+                    actualSomebodyTotal = someBodyMap.get(key);
+
+                } else if ("reservationSomebodyTotal".equals(key)) {
+
+                    reservationSomebodyTotal = someBodyMap.get(key);
+                }
+            }
+            return new Result(true, StatusCode.OK, "统计成功", "爽约访问次数为"+ standUpSomebodyTotal
+                    + "实际访问次数为"+ actualSomebodyTotal
+                    + "总共访问次数为"+ reservationSomebodyTotal );
+
         }
-        return new Result(true, StatusCode.OK, "统计成功", "爽约访问次数为"+ standUpSomebodyTotal
-                + "实际访问次数为"+ actualSomebodyTotal
-                + "总共访问次数为"+ reservationSomebodyTotal );
+
+
+        return new Result(true, StatusCode.OK, "统计成功", redisUtils.get(phone));
+
     }
 
 

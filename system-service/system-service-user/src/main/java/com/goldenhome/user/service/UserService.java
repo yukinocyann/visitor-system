@@ -34,7 +34,7 @@ public interface UserService {
 
     void updateReservation(String localTime, String phone);
 
-    void updateUserActualVisitStatus(String localTime);
+    void updateUserActualVisitStatus();
 
     AccessCode queryAccessCode(Integer id);
 

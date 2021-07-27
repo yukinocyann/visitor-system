@@ -80,8 +80,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUserActualVisitStatus(String queryTime) {
-        userMapper.updateUserActualVisitStatus(queryTime);
+    public void updateUserActualVisitStatus() {
+        userMapper.updateUserActualVisitStatus();
     }
 
     @Override

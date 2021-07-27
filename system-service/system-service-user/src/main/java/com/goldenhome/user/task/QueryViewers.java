@@ -18,33 +18,10 @@ public class QueryViewers {
     private UserService userService;
 
 
-//    @Scheduled(cron = "0 55 23 * * ?")
-//    public Result statistics() {
-//
-//        String localTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-//
-//        Statistic record = userService.check(localTime);
-//
-//        if (null != record) {
-//            return new Result(false, StatusCode.ERROR, "已经统计",
-//                    "今日预约访问人数为" + record.getReservationVisitorTotal()
-//                            + "今日实际访问人数为" + record.getActualVisitorTotal()
-//                            + "今日爽约访问人数为" + record.getStandUpVisitorTotal());
-//        }
-//
-//        String count = userService.count(localTime);
-//
-//        userService.insertStatistic(localTime, count);
-//
-//        return new Result(true, StatusCode.OK, "统计成功", "今日预约访问人数为" + count);
-//    }
-
     @Scheduled(cron = "0 0 0/1 * * ? ")
     public Result Novisitor() {
 
-        String localTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-
-        userService.updateUserActualVisitStatus(localTime);
+        userService.updateUserActualVisitStatus();
 
         return new Result(true, StatusCode.OK, "修改成功");
     }

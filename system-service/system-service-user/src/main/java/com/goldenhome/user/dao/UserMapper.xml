@@ -162,7 +162,7 @@
     actualVisitTime = now(),
     actualVisitStatus = 1
     where
-    TIMESTAMPDIFF(MINUTE,NOW(),reservationLoginTime) >= -60
+    120 >= TIMESTAMPDIFF(MINUTE,NOW(),reservationLoginTime) >= -60
     and
     phone = #{phone}
     and
@@ -174,7 +174,7 @@
     set
     actualVisitStatus = 0
     where
-    TIMESTAMPDIFF(HOUR,reservationLoginTime,#{localTime})  >= 1
+    TIMESTAMPDIFF(HOUR,reservationLoginTime,now())  >= 1
     and
     actualVisitStatus = 2
     </update>
